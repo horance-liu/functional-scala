@@ -1,0 +1,173 @@
+\section{函数式设计}
+\label{sec:fpdesign}
+
+\begin{frame}
+  \begin{center}
+    \Huge{\textcolor{red}{函数式设计}}
+  \end{center}
+\end{frame}
+
+\subsection{引入函数}
+
+\begin{frame}[fragile]{String <-> StringOps}
+ \begin{block}{隐式转换: StringOps实现了exists, forall等所有集合方法}
+  \begin{scala}
+object Predef {
+  implicit def augmentString(x: String): StringOps = new StringOps(x)  
+  implicit def unaugmentString(x: StringOps): String = x.repr
+}
+  \end{scala}
+ \end{block}
+\end{frame}
+
+\subsection{原子}
+
+\begin{frame}[fragile]{占位符}
+  \begin{scala}
+def always: Any => Boolean = _ => true
+def never:  Any => Boolean = _ => false  
+
+word.exists(always)
+  \end{scala}
+\end{frame}
+
+\begin{frame}[fragile]{逻辑相等性}
+  \begin{scala}
+def equalTo[T](expected: T): T => Boolean = _ == expected
+
+word.exists(equalTo('_'))
+  \end{scala}
+\end{frame}
+
+\begin{frame}[fragile]{字符原子}
+  \begin{scala}
+word.exists(_.isDigit)
+word.exists(_.isLetter)
+
+word.exists(_.isUpper)
+word.exists(_.isLower)
+  \end{scala}
+\end{frame}
+
+\begin{frame}[fragile]{对象一致性}
+  \begin{scala}
+def same[T <: AnyRef](t: T): T => Boolean = t eq _
+  \end{scala}
+\end{frame}
+
+\begin{frame}[fragile]{类型校验}
+  \begin{scala}
+def instanceOf[T : ClassTag]: Any => Boolean = x =>
+  x match {
+    case _: T => true
+    case _    => false
+  }
+  \end{scala}
+\end{frame}
+
+\begin{frame}[fragile]{语法糖}
+  \begin{scala}
+val nil   = equalTo[AnyRef](null)
+val empty = equalTo("")
+  \end{scala}
+\end{frame}
+
+\subsection{组合}
+
+\begin{frame}[fragile]{组合器}
+  \begin{scala}
+def allof[T](matchers: (T => Boolean)*): T => Boolean =
+  actual => matchers.forall(_(actual))
+
+def anyof[T](matchers: (T => Boolean)*): T => Boolean =
+  actual => matchers.exists(_(actual))
+  \end{scala}
+\end{frame}
+
+\begin{frame}[fragile]{语法糖}
+  \begin{scala}
+def blank: String => Boolean = 
+  """\s*""".r.pattern.matcher(_).matches
+
+val emptyOrNil = anyof(nil, equalTo(""))
+val blankOrNil = anyof(nil, blank)
+  \end{scala}
+\end{frame}
+
+\subsection{修饰}
+
+\begin{frame}[fragile]{修饰器}
+  \begin{scala}
+def not[T](matcher: T => Boolean): T => Boolean = !matcher(_)
+def is[T](matcher: T => Boolean):  T => Boolean = matcher
+
+word.exist(not(equalTo('_')))
+  \end{scala}
+\end{frame}
+
+\begin{frame}[fragile]{语法糖}
+  \begin{scala}
+def not[T](expected: T): T => Boolean = not(equalTo(expected))
+def is[T](expected: T):  T => Boolean = is(equalTo(expected))
+
+word.exist(not('_'))
+  \end{scala}
+\end{frame}
+
+\begin{frame}[fragile]{字符修饰器}
+  \begin{scala}
+type CharMatcher = Char => Char => Boolean
+
+def ignoringCase(matcher: CharMatcher): CharMatcher = sc => 
+  c => matcher(sc.toLower)(c.toLower)
+
+word.exist(ignoringCase(equalTo)('x'))
+  \end{scala}
+\end{frame}
+
+\begin{frame}[fragile]{类比：字符串修饰器}
+  \begin{scala}
+type StringMatcher = String => String => Boolean
+
+def starts: StringMatcher = prefix =>
+  _ startsWith prefix
+
+def ends: StringMatcher = suffix =>
+  _ endsWith suffix
+
+def contains: StringMatcher = substr =>
+  _ contains substr
+
+def ignoringCase(matcher: StringMatcher): StringMatcher = substr => 
+  str => matcher(substr.toLowerCase)(str.toLowerCase)  
+  \end{scala}
+\end{frame}
+
+\subsection{类型增强}
+
+\begin{frame}[fragile]{流式接口}
+  \begin{scala}
+word.exists { anyof(is('a'), is('z')) }
+word.exists { is('a') || is('z') }
+  \end{scala}
+\end{frame}
+
+\begin{frame}[fragile]{增强谓词：Matcher}
+  \begin{scala}
+implicit class Matcher[-A](pred: A => Boolean) extends (A => Boolean) {
+  self =>
+
+  def &&[A1 <: A](that: A1 => Boolean): A1 => Boolean =
+    x => self(x) && that(x)
+
+  def ||[A1 <: A](that: A1 => Boolean): A1 => Boolean =
+    x => self(x) || that(x)
+
+  def unary_![A1 <: A]: A1 => Boolean =
+    !self(_)
+
+  def apply(x: A): Boolean = pred(x)
+}
+  \end{scala}
+\end{frame}
+

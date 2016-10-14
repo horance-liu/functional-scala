@@ -1,0 +1,310 @@
+\section{面向对象}
+\label{sec:oodesign}
+
+\begin{frame}
+  \begin{center}
+    \Huge{\textcolor{red}{面向对象设计}}
+  \end{center}
+\end{frame}
+
+\subsection{迭代1}
+
+\begin{frame}{需求}
+  \begin{block}{}
+    \begin{enumerate}
+      \item \alert{需求1}：判断某个单词是否包含数字
+    \end{enumerate}
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]{快速实现}
+  \begin{scala}
+def hasDigit(word: String): Boolean = {
+  var i = 0
+  while (i < word.length) {
+    if (word.charAt(i).isDigit) 
+      return true
+    i += 1
+  }
+  return false
+}
+  \end{scala}
+\end{frame}
+
+\begin{frame}[fragile]{for推导式}
+  \begin{scala}
+def hasDigit(word: String): Boolean = {
+  for (c <- word if c.isDigit) 
+    return true
+  false
+}
+  \end{scala}
+\end{frame}
+
+\subsection{迭代2}
+
+\begin{frame}{需求}
+  \begin{block}{}
+    \begin{enumerate}
+    \item \alert{需求1}：判断某个单词是否包含数字
+    \item \alert{需求2}：判断某个单词是否包含大写字母
+    \end{enumerate}
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]{复制-粘贴}
+  \begin{scala}
+def hasUpperCase(word: String): Boolean = {
+  for (c <- word if c.isUpper)
+    return true
+  false
+}
+  \end{scala}
+\end{frame}
+
+\begin{frame}[fragile]{抽象}
+  \begin{scala}
+trait CharSpec {
+  def satisfy(c: Char): Boolean
+}
+
+def exists(word: String, spec: CharSpec): Boolean = {
+  for (c <- word if spec.satisfy(c))
+    return true
+  false
+}
+  \end{scala}
+\end{frame}
+
+\begin{frame}[fragile]{匿名内部类}
+  \begin{scala}
+exists(word, new CharSpec {
+  def satisfy(c: Char): Boolean = c.isDigit
+})
+
+exists(word, new CharSpec {
+  def satisfy(c: Char): Boolean = c.isUpper
+})
+  \end{scala}
+\end{frame}
+
+\begin{frame}[fragile]{复用对象}
+  \begin{scala}
+object IsDigit extends CharSpec {
+  def satisfy(c: Char): Boolean = c.isDigit
+}
+
+object IsUpper extends CharSpec {
+  def satisfy(c: Char): Boolean = c.isUpper
+}
+
+exists(word, IsDigit)
+exists(word, IsUpper)
+  \end{scala}
+\end{frame}
+
+\subsection{迭代3}
+
+\begin{frame}{需求}
+  \begin{block}{}
+    \begin{enumerate}
+    \item \alert{需求1}：判断某个单词是否包含数字
+    \item \alert{需求2}：判断某个单词是否包含大写字母
+    \item \alert{需求3}：判断某个单词是否包含下划线 
+    \end{enumerate}
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]{具名函数对象}
+  \begin{scala}
+case class Equals(ch: Char) extends CharSpec {
+  def satisfy(ch: Char): Boolean = this.ch == ch
+}
+
+exists(word, Equals('_'))
+  \end{scala}
+\end{frame}
+
+\subsection{迭代4}
+
+\begin{frame}{需求}
+  \begin{block}{}
+    \begin{enumerate}
+    \item \alert{需求1}：判断某个单词是否包含数字
+    \item \alert{需求2}：判断某个单词是否包含大写字母
+    \item \alert{需求3}：判断某个单词是否包含下划线 
+    \item \alert{需求4}：判断某个单词是否不包含下划线     
+    \end{enumerate}
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]{修饰语义}
+  \begin{scala}
+def exists(word: String, spec: CharSpec): Boolean = {
+  for (c <- word if spec.satisfy(c))  
+    return true
+  false
+}
+
+def forall(word: String, spec: CharSpec): Boolean = {
+  for (c <- word if !spec.satisfy.(c))  
+    return false
+  true
+}
+
+case class Not(spec: CharSpec) extends CharSpec {
+  def satisfy(ch: Char): Boolean = !spec.satisfy(ch)
+}
+
+forall(word, Not(Equals('_')))
+  \end{scala}
+\end{frame}
+
+\begin{frame}[fragile]{消除重复}
+  \begin{scala}
+private def comb(word: String, spec: CharSpec, shortcut: Boolean): Boolean = {
+  for (c <- word if spec.satisfy(c) == shortcut) 
+    return shortcut
+  !shortcut
+}
+
+def exists(word: String, spec: CharSpec): Boolean = 
+  comb(word, spec, true)
+
+def forall(word: String, spec: CharSpec): Boolean = 
+  comb(word, spec, false)
+  \end{scala}
+\end{frame}
+
+\subsection{迭代5}
+
+\begin{frame}{需求}
+  \begin{block}{}
+    \begin{enumerate}
+    \item \alert{需求1}：判断某个单词是否包含数字
+    \item \alert{需求2}：判断某个单词是否包含大写字母
+    \item \alert{需求3}：判断某个单词是否包含下划线 
+    \item \alert{需求4}：判断某个单词是否不包含\_
+    \item \alert{需求5}：判断某个单词是否包含\_，或者*   
+    \end{enumerate}
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]{组合或}
+  \begin{scala}
+case class Or(left: CharSpec, right: CharSpec) extends CharSpec {
+  def satisfy(c: Char): Boolean = 
+    left.satisfy(c) || right.satisfy(c)
+}
+
+exists(word, Or(Equals('_'), Equals('*')))
+  \end{scala}
+\end{frame}
+
+\subsection{迭代6}
+
+\begin{frame}{需求}
+  \begin{block}{}
+    \begin{enumerate}
+    \item \alert{需求1}：判断某个单词是否包含数字
+    \item \alert{需求2}：判断某个单词是否包含大写字母
+    \item \alert{需求3}：判断某个单词是否包含下划线 
+    \item \alert{需求4}：判断某个单词是否不包含\_
+    \item \alert{需求5}：判断某个单词是否包含\_，或者\*     
+    \item \alert{需求6}：判断某个单词是否包含空白符，但除去空格     
+    \end{enumerate}
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]{组合与}
+  \begin{scala}
+case class And(left: CharSpec, right: CharSpec) extends CharSpec {
+  def satisfy(c: Char): Boolean = 
+    left.satisfy(c) && right.satisfy(c)
+}
+
+object IsWhitespace extends CharSpec {
+  def satisfy(c: Char): Boolean = c.isWhitespace
+}
+
+exists(word, And(IsWhitespace, Not(Equals(' '))))
+  \end{scala}
+\end{frame}
+
+\subsection{迭代7}
+
+\begin{frame}{需求}
+  \begin{block}{}
+    \begin{enumerate}
+    \item \alert{需求1}：判断某个单词是否包含数字
+    \item \alert{需求2}：判断某个单词是否包含大写字母
+    \item \alert{需求3}：判断某个单词是否包含下划线 
+    \item \alert{需求4}：判断某个单词是否不包含\_
+    \item \alert{需求5}：判断某个单词是否包含\_，或者\*     
+    \item \alert{需求6}：判断某个单词是否包含空白符，但除去空格
+    \item \alert{需求7}：判断某个单词是否包含字母x，且不区分大小写
+    \end{enumerate}
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]{修饰}
+  \begin{scala}
+case class IgnoringCase(spec: CharSpec) extends CharSpec {
+  def satisfy(c: Char): Boolean = spec.satisfy(c.toLower)
+}
+
+object IgnoringCase {
+  def equals(ch: Char) = IgnoringCase(Equals(ch.toLower))
+}
+
+exists(word, IgnoringCase.equals('x'))
+  \end{scala}
+\end{frame}
+
+\subsection{迭代8}
+
+\begin{frame}{需求}
+  \begin{block}{}
+    \begin{enumerate}
+    \item \alert{需求1}：判断某个单词是否包含数字
+    \item \alert{需求2}：判断某个单词是否包含大写字母
+    \item \alert{需求3}：判断某个单词是否包含下划线 
+    \item \alert{需求4}：判断某个单词是否不包含\_
+    \item \alert{需求5}：判断某个单词是否包含\_，或者\*     
+    \item \alert{需求6}：判断某个单词是否包含空白符，但除去空格
+    \item \alert{需求7}：判断某个单词是否包含字母x，且不区分大小写
+    \item \alert{需求8}：判断某个单词满足某种特征，总时成功    
+    \end{enumerate}
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]{占位符}
+  \begin{scala}
+sealed class Placeholder(bool: Boolean) extends CharSpec {
+  def satisfy(c: Char): Boolean = bool
+}
+
+object Always extends Placeholder(true)
+object Never  extends Placeholder(false)
+
+exists(word, Always)
+exists(word, Never)
+  \end{scala}
+\end{frame}
+
+\begin{frame}[fragile]{增强String}
+  \begin{scala}
+implicit class RichString(s: String) {
+  def exists(spec: CharSpec): Boolean = comb(spec, true)
+  def forall(spec: CharSpec): Boolean = comb(spec, false)
+
+  private def comb(spec: CharSpec, shortcut: Boolean): Boolean = {
+    for (c <- s if spec.satisfy(c) == shortcut) 
+      return shortcut
+    !shortcut
+  }  
+}
+
+word.exists(IgnoringCase.equals('x'))
+  \end{scala}
+\end{frame}
