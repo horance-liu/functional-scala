@@ -9,12 +9,72 @@
 
 \subsection{引入函数}
 
-\begin{frame}[fragile]{String <-> StringOps}
+\begin{frame}[fragile]{函数式接口}
+ \begin{block}{函数类型}
+  \begin{scala}
+trait CharSpec {
+  def satisfy(c: Char): Boolean
+}
+
+trait Function1[-T, +R] {
+  def apply(t: T): R
+
+  def compose[A](g: A => T): A => R = x => apply(g(x))
+  def andThen[A](g: R => A): T => A = x => g(apply(x)) 
+}
+
+val hasUpper: Char => Boolean = _.isUpper
+val hasDigit: Char => Boolean = _.isDigit
+  \end{scala}
+ \end{block}
+\end{frame}
+
+\begin{frame}[fragile]{递归}
+ \begin{block}{尾递归}
+  \begin{scala}
+def exists(s: Seq[Char])(p: Char => Boolean): Boolean =
+  s match {
+    case h +: t if (p(h)) => true
+    case h +: t => exists(t)(p)
+    case _ => false
+  }
+
+def forall(s: Seq[Char])(p: Char => Boolean): Boolean =
+  s match {
+    case h +: t if (!p(h)) => false
+    case h +: t => forall(t)(p)
+    case _ => true
+  }
+  \end{scala}
+ \end{block}
+\end{frame}
+
+\begin{frame}[fragile]{表准库实现：String <-> StringOps}
  \begin{block}{隐式转换: StringOps实现了exists, forall等所有集合方法}
   \begin{scala}
 object Predef {
-  implicit def augmentString(x: String): StringOps = new StringOps(x)  
-  implicit def unaugmentString(x: StringOps): String = x.repr
+  implicit def wrap(x: String): StringOps = new StringOps(x)
+  implicit def unwrap(x: StringOps): String = x.repr
+}
+  \end{scala}
+ \end{block}
+\end{frame}
+
+\begin{frame}[fragile]{StringOps的继承树}
+ \begin{block}{隐式转换: StringOps实现了exists, forall等所有集合方法}
+  \begin{scala}
+trait IndexedSeqOptimized[+A, +Repr] with IndexedSeqLike[A, Repr] {  
+  private def prefixLength(p: A => Boolean, expectTrue: Boolean): Int = {
+    var i = 0
+    while (i < length && p(apply(i)) == expectTrue) i += 1
+    i
+  }
+
+  override def forall(p: A => Boolean): Boolean = 
+    prefixLength(p, true) == length
+  
+  override def exists(p: A => Boolean): Boolean = 
+    prefixLength(p, false) != length
 }
   \end{scala}
  \end{block}
@@ -36,16 +96,6 @@ word.exists(always)
 def equalTo[T](expected: T): T => Boolean = _ == expected
 
 word.exists(equalTo('_'))
-  \end{scala}
-\end{frame}
-
-\begin{frame}[fragile]{字符原子}
-  \begin{scala}
-word.exists(_.isDigit)
-word.exists(_.isLetter)
-
-word.exists(_.isUpper)
-word.exists(_.isLower)
   \end{scala}
 \end{frame}
 
@@ -125,7 +175,7 @@ word.exist(ignoringCase(equalTo)('x'))
   \end{scala}
 \end{frame}
 
-\begin{frame}[fragile]{类比：字符串修饰器}
+\begin{frame}[fragile]{字符串修饰器}
   \begin{scala}
 type StringMatcher = String => String => Boolean
 

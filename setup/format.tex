@@ -136,6 +136,37 @@ belowcaptionskip=1em
 \newfontfamily\optima{Optima}
 \newfontfamily\lucida{Lucida Bright}
 
+\newcommand{\ascii}[1]{{\sffamily #1}}
+\newcommand{\speak}[1]{{\itshape #1}}
+\renewcommand{\emph}[1]{{\hei #1}}
+
+%% 自定义宋体
+\newcommand{\song}{\CJKfamily{song}}                       
+%% 自定义楷体
+\newcommand{\kai}{\CJKfamily{kai}}                         
+%% 自定义黑体
+\newcommand{\hei}{\CJKfamily{hei}}                         
+%% 自定义仿宋体
+\newcommand{\fangsong}{\CJKfamily{fangsong}}               
+%% 自定义隶书
+\newcommand{\lisu}{\CJKfamily{lisu}}                       
+%% 自定义幼圆
+\newcommand{\youyuan}{\CJKfamily{youyuan}}                 
+
+%%%% xeCJK字体设置结束
+%%%%%%%%------------------------------------------------------------------------
+
+%%%%%%%%------------------------------------------------------------------------
+%%%% 一些关于中文文档的重定义
+
+%% 数学公式定理的重定义
+
+%% 按section编号
+\newtheorem{principle}{原则}[section]
+\newtheorem{regulation}{规则}[section]
+\newtheorem{advise}{建议}[section]
+\newtheorem{concept}{概念}[section]
+
 % Graphix
 \usepackage{graphicx}
 

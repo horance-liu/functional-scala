@@ -54,7 +54,7 @@ def hasDigit(word: String): Boolean = {
 
 \begin{frame}[fragile]{复制-粘贴}
   \begin{scala}
-def hasUpperCase(word: String): Boolean = {
+def hasUpper(word: String): Boolean = {
   for (c <- word if c.isUpper)
     return true
   false
@@ -65,7 +65,7 @@ def hasUpperCase(word: String): Boolean = {
 \begin{frame}[fragile]{抽象}
   \begin{scala}
 trait CharSpec {
-  def satisfy(c: Char): Boolean
+  def satisfy(c: Char): Boolean
 }
 
 def exists(word: String, spec: CharSpec): Boolean = {
@@ -79,11 +79,11 @@ def exists(word: String, spec: CharSpec): Boolean = {
 \begin{frame}[fragile]{匿名内部类}
   \begin{scala}
 exists(word, new CharSpec {
-  def satisfy(c: Char): Boolean = c.isDigit
+  def satisfy(c: Char): Boolean = c.isDigit
 })
 
 exists(word, new CharSpec {
-  def satisfy(c: Char): Boolean = c.isUpper
+  def satisfy(c: Char): Boolean = c.isUpper
 })
   \end{scala}
 \end{frame}
@@ -91,11 +91,11 @@ exists(word, new CharSpec {
 \begin{frame}[fragile]{复用对象}
   \begin{scala}
 object IsDigit extends CharSpec {
-  def satisfy(c: Char): Boolean = c.isDigit
+  def satisfy(c: Char): Boolean = c.isDigit
 }
 
 object IsUpper extends CharSpec {
-  def satisfy(c: Char): Boolean = c.isUpper
+  def satisfy(c: Char): Boolean = c.isUpper
 }
 
 exists(word, IsDigit)
@@ -118,7 +118,7 @@ exists(word, IsUpper)
 \begin{frame}[fragile]{具名函数对象}
   \begin{scala}
 case class Equals(ch: Char) extends CharSpec {
-  def satisfy(ch: Char): Boolean = this.ch == ch
+  def satisfy(ch: Char): Boolean = this.ch == ch
 }
 
 exists(word, Equals('_'))
@@ -147,13 +147,13 @@ def exists(word: String, spec: CharSpec): Boolean = {
 }
 
 def forall(word: String, spec: CharSpec): Boolean = {
-  for (c <- word if !spec.satisfy.(c))  
+  for (c <- word if !spec.satisfy(c))  
     return false
   true
 }
 
 case class Not(spec: CharSpec) extends CharSpec {
-  def satisfy(ch: Char): Boolean = !spec.satisfy(ch)
+  def satisfy(ch: Char): Boolean = !spec.satisfy(ch)
 }
 
 forall(word, Not(Equals('_')))
