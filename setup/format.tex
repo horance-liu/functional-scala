@@ -104,7 +104,37 @@ belowcaptionskip=1em
 % CJK packages
 \usepackage{xeCJK}
 %\setCJKmainfont{KaiTi}
-\setCJKmainfont{Adobe Heiti Std}
+%\setCJKmainfont{Adobe Heiti Std}
+
+%% 设置缺省中文字体
+\setCJKmainfont[BoldFont={Adobe Heiti Std}, ItalicFont={Adobe Kaiti Std}]{Adobe Song Std}   %  FZBaoSongZ04
+%% 设置中文无衬线字体
+\setCJKsansfont[BoldFont={Adobe Heiti Std}, ItalicFont={Adobe Kaiti Std}]{Adobe Kaiti Std}  
+%% 设置等宽字体
+\setCJKmonofont{Adobe Heiti Std}                            
+%\setCJKmonofont{Monaco}                            
+
+%% 英文衬线字体
+\setmainfont{Lucida Bright}                                  
+%% 英文等宽字体
+%\setmonofont{Courier}
+\setmonofont{Monaco}                             
+%\setmonofont{Consolas}                              
+%% 英文无衬线字体
+\setsansfont{Optima}                                   
+
+%% 定义新字体
+\setCJKfamilyfont{song}{Adobe Song Std}                     
+\setCJKfamilyfont{kai}{Adobe Kaiti Std}
+\setCJKfamilyfont{hei}{Adobe Heiti Std}
+\setCJKfamilyfont{fangsong}{Adobe Song Std}
+\setCJKfamilyfont{lisu}{LiShu}
+\setCJKfamilyfont{youyuan}{Adobe Kaiti Std}
+
+%%自定义英文字体
+\newfontfamily\couriernew{Lucida Grande}
+\newfontfamily\optima{Optima}
+\newfontfamily\lucida{Lucida Bright}
 
 % Graphix
 \usepackage{graphicx}
