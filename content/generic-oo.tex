@@ -1,0 +1,185 @@
+\section{泛型设计}
+\label{sec:generic-oo}
+
+\begin{frame}
+  \begin{center}
+    \Huge{\textcolor{red}{泛型设计}}
+  \end{center}
+\end{frame}
+
+\subsection{泛化}
+
+\begin{frame}[fragile]{泛化trait}
+  \begin{scala}
+trait Matcher[-A] {
+  def apply(x: A): Boolean
+}
+  \end{scala}
+\end{frame}
+
+\subsection{原子}
+
+\begin{frame}[fragile]{占位符}
+  \begin{scala}
+sealed class Placeholder(bool: Boolean) extends Matcher[Any] {
+  def apply(x: Any): Boolean = bool
+}
+
+object Always extends Placeholder(true)
+object Never  extends Placeholder(false)
+  \end{scala}
+\end{frame}
+
+\begin{frame}[fragile]{逻辑相等性}
+  \begin{scala}
+class Equals[-A](expected: A) extends Matcher[A] {
+  def apply(actual: A): Boolean = actual == expected
+}
+
+object Equals {
+  def apply[A](expected: A) = new Equals(expected)
+}
+  \end{scala}
+\end{frame}
+
+\begin{frame}[fragile]{语法糖}
+  \begin{scala}
+object IsNil extends Equals[AnyRef](null)
+object IsEmpty extends Equals("")
+  \end{scala}
+\end{frame}
+
+\begin{frame}[fragile]{对象一致性}
+  \begin{scala}
+class Same[-A <: AnyRef](expected: A) extends Matcher[A] {
+  def apply(actual: A): Boolean = expected eq actual
+}
+
+object Same {
+  def apply[A <: AnyRef](expected: A) = new Same(expected)
+}
+  \end{scala}
+\end{frame}
+
+\begin{frame}[fragile]{类型校验}
+  \begin{scala}
+import scala.reflect.ClassTag
+
+class InstanceOf[-A : ClassTag] extends Matcher[Any] {
+  def apply(actual: Any): Boolean = actual match {
+    case _: A => true
+    case _    => false
+  }
+}
+
+object InstanceOf {
+  def apply[A : ClassTag] = new InstanceOf[A]
+}
+  \end{scala}
+\end{frame}
+
+\begin{frame}[fragile]{字符串}
+  \begin{scala}
+case class Starts(prefix: String) extends Matcher[String] {
+  def apply(str: String): Boolean = str startsWith prefix
+}
+
+case class Ends(suffix: String) extends Matcher[String] {
+  def apply(str: String): Boolean = str endsWith suffix
+}
+
+case class Contains(substr: String) extends Matcher[String] {
+  def apply(str: String): Boolean = str contains substr
+}
+  \end{scala}
+\end{frame}
+
+\subsection{组合}
+
+\begin{frame}[fragile]{组合器}
+  \begin{scala}
+case class AllOf[-A](matchers: Matcher[A]*) extends Matcher[A] {
+  def apply(actual: A): Boolean = matchers.forall { _(actual) }
+}
+
+case class AnyOf[-A](matchers: Matcher[A]*) extends Matcher[A] {
+  def apply(actual: A): Boolean = matchers.exists { _(actual) }
+}
+  \end{scala}
+\end{frame}
+
+\begin{frame}[fragile]{语法糖}
+  \begin{scala}
+object IsBlank extends Matcher[String] { 
+  def apply(actual: String): Boolean = 
+    """\s*""".r.pattern.matcher(actual).matches
+}
+
+object EmptyOrNil extends AnyOf(IsNil, IsEmpty)
+object BlankOrNil extends AnyOf(IsNil, IsBlank)
+  \end{scala}
+\end{frame}
+
+\subsection{修饰}
+
+\begin{frame}[fragile]{修饰器}
+  \begin{scala}
+case class Not[-A](matcher: Matcher[A]) extends Matcher[A] {
+  def apply(actual: A): Boolean = !matcher(actual)
+}
+
+case class Is[-A](matcher: Matcher[A]) extends Matcher[A] {
+  def apply(actual: A): Boolean = matcher(actual)
+}
+  \end{scala}
+\end{frame}
+
+\begin{frame}[fragile]{语法糖}
+  \begin{scala}
+object Not {
+  def apply[A](expected: A): Not[A] = Not(Equals(expected))
+}
+
+object Is {
+  def apply[A](expected: A): Is[A] = Is(Equals(expected))
+}
+  \end{scala}
+\end{frame}
+
+\begin{frame}[fragile]{字符串}
+  \begin{scala}
+case class IgnoringCase(matcher: Matcher[String]) extends Matcher[String] {
+  def apply(actual: String): Boolean = matcher(actual.toLowerCase)
+}
+
+object IgnoringCase {
+  def equals(s: String) = IgnoringCase(Equals(s.toLowerCase))
+  def starts(s: String) = IgnoringCase(Starts(s.toLowerCase))
+  def ends(s: String)   = IgnoringCase(Ends(s.toLowerCase))
+} 
+  \end{scala}
+\end{frame}
+
+\subsection{类型增强}
+
+\begin{frame}[fragile]{增强匹配器}
+  \begin{scala}
+trait Matcher[-A] {
+  self =>
+
+  def apply(x: A): Boolean
+
+  def &&[A1 <: A](that: Matcher[A1]) = new Matcher[A1] {
+    def apply(x: A1): Boolean = self(x) && that(x)
+  }
+
+  def ||[A1 <: A](that: Matcher[A1]) = new Matcher[A1] {
+    def apply(x: A1): Boolean = self(x) || that(x)
+  }
+
+  def unary_![A1 <: A] = new Matcher[A1] {
+    def apply(x: A1): Boolean = !self(x)
+  }
+}
+  \end{scala}
+\end{frame}

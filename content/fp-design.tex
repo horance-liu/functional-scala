@@ -97,6 +97,13 @@ word.exists(equalTo('_'))
   \end{scala}
 \end{frame}
 
+\begin{frame}[fragile]{语法糖}
+  \begin{scala}
+val nil   = equalTo[AnyRef](null)
+val empty = equalTo("")
+  \end{scala}
+\end{frame}
+
 \begin{frame}[fragile]{对象一致性}
   \begin{scala}
 def same[T <: AnyRef](t: T): T => Boolean = t eq _
@@ -110,13 +117,6 @@ def instanceOf[T : ClassTag]: Any => Boolean = x =>
     case _: T => true
     case _    => false
   }
-  \end{scala}
-\end{frame}
-
-\begin{frame}[fragile]{语法糖}
-  \begin{scala}
-val nil   = equalTo[AnyRef](null)
-val empty = equalTo("")
   \end{scala}
 \end{frame}
 
