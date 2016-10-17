@@ -12,7 +12,7 @@
 \begin{frame}{需求}
   \begin{block}{}
     \begin{enumerate}
-      \item \alert{需求1}：判断某个单词是否包含数字
+      \item<alert@1-> 需求1：判断某个单词是否包含数字
     \end{enumerate}
   \end{block}
 \end{frame}
@@ -47,7 +47,7 @@ def hasDigit(word: String): Boolean = {
   \begin{block}{}
     \begin{enumerate}
     \item \alert{需求1}：判断某个单词是否包含数字
-    \item \alert{需求2}：判断某个单词是否包含大写字母
+    \item<alert@1-> 需求2：判断某个单词是否包含大写字母
     \end{enumerate}
   \end{block}
 \end{frame}
@@ -110,7 +110,7 @@ exists(word, IsUpper)
     \begin{enumerate}
     \item \alert{需求1}：判断某个单词是否包含数字
     \item \alert{需求2}：判断某个单词是否包含大写字母
-    \item \alert{需求3}：判断某个单词是否包含下划线 
+    \item<alert@1-> 需求3：判断某个单词是否包含下划线 
     \end{enumerate}
   \end{block}
 \end{frame}
@@ -133,7 +133,7 @@ exists(word, Equals('_'))
     \item \alert{需求1}：判断某个单词是否包含数字
     \item \alert{需求2}：判断某个单词是否包含大写字母
     \item \alert{需求3}：判断某个单词是否包含下划线 
-    \item \alert{需求4}：判断某个单词是否不包含下划线     
+    \item<alert@1-> 需求4：判断某个单词是否不包含下划线     
     \end{enumerate}
   \end{block}
 \end{frame}
@@ -162,17 +162,18 @@ forall(word, Not(Equals('_')))
 
 \begin{frame}[fragile]{消除重复}
   \begin{scala}
-private def comb(word: String, spec: CharSpec, shortcut: Boolean): Boolean = {
-  for (c <- word if spec.satisfy(c) == shortcut) 
-    return shortcut
-  !shortcut
+private def comb(word: String, spec: CharSpec)(
+  expectTrue: Boolean): Boolean = {
+  for (c <- word if spec.satisfy(c) == expectTrue) 
+    return expectTrue
+  !expectTrue
 }
 
 def exists(word: String, spec: CharSpec): Boolean = 
-  comb(word, spec, true)
+  comb(word, spec) { expectTrue = true }
 
 def forall(word: String, spec: CharSpec): Boolean = 
-  comb(word, spec, false)
+  comb(word, spec) { expectTrue = false }
   \end{scala}
 \end{frame}
 
@@ -185,7 +186,7 @@ def forall(word: String, spec: CharSpec): Boolean =
     \item \alert{需求2}：判断某个单词是否包含大写字母
     \item \alert{需求3}：判断某个单词是否包含下划线 
     \item \alert{需求4}：判断某个单词是否不包含\_
-    \item \alert{需求5}：判断某个单词是否包含\_，或者*   
+    \item<alert@1-> 需求5：判断某个单词是否包含\_，或者*   
     \end{enumerate}
   \end{block}
 \end{frame}
@@ -211,7 +212,7 @@ exists(word, Or(Equals('_'), Equals('*')))
     \item \alert{需求3}：判断某个单词是否包含下划线 
     \item \alert{需求4}：判断某个单词是否不包含\_
     \item \alert{需求5}：判断某个单词是否包含\_，或者\*     
-    \item \alert{需求6}：判断某个单词是否包含空白符，但除去空格     
+    \item<alert@1-> 需求6：判断某个单词是否包含空白符，但除去空格     
     \end{enumerate}
   \end{block}
 \end{frame}
@@ -242,7 +243,7 @@ exists(word, And(IsWhitespace, Not(Equals(' '))))
     \item \alert{需求4}：判断某个单词是否不包含\_
     \item \alert{需求5}：判断某个单词是否包含\_，或者\*     
     \item \alert{需求6}：判断某个单词是否包含空白符，但除去空格
-    \item \alert{需求7}：判断某个单词是否包含字母x，且不区分大小写
+    \item<alert@1-> 需求7：判断某个单词是否包含字母x，且不区分大小写
     \end{enumerate}
   \end{block}
 \end{frame}
@@ -273,7 +274,7 @@ exists(word, IgnoringCase.equals('x'))
     \item \alert{需求5}：判断某个单词是否包含\_，或者\*     
     \item \alert{需求6}：判断某个单词是否包含空白符，但除去空格
     \item \alert{需求7}：判断某个单词是否包含字母x，且不区分大小写
-    \item \alert{需求8}：判断某个单词满足某种特征，总时成功    
+    \item<alert@1-> 需求8：判断某个单词满足某种特征，总时成功    
     \end{enumerate}
   \end{block}
 \end{frame}
@@ -295,13 +296,16 @@ exists(word, Never)
 \begin{frame}[fragile]{增强String}
   \begin{scala}
 implicit class RichString(s: String) {
-  def exists(spec: CharSpec): Boolean = comb(spec, true)
-  def forall(spec: CharSpec): Boolean = comb(spec, false)
+  def exists(spec: CharSpec): Boolean = 
+    comb(spec) { expectTrue = true  }
+  
+  def forall(spec: CharSpec): Boolean = 
+    comb(spec) { expectTrue = false }
 
-  private def comb(spec: CharSpec, shortcut: Boolean): Boolean = {
-    for (c <- s if spec.satisfy(c) == shortcut) 
-      return shortcut
-    !shortcut
+  private def comb(spec: CharSpec)(expectTrue: Boolean): Boolean = {
+    for (c <- s if spec.satisfy(c) == expectTrue) 
+      return expectTrue
+    !expectTrue
   }  
 }
 

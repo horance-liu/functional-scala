@@ -12,10 +12,6 @@
 \begin{frame}[fragile]{函数式接口}
  \begin{block}{函数类型}
   \begin{scala}
-trait CharSpec {
-  def satisfy(c: Char): Boolean
-}
-
 trait Function1[-T, +R] {
   def apply(t: T): R
 
@@ -32,18 +28,18 @@ val hasDigit: Char => Boolean = _.isDigit
 \begin{frame}[fragile]{递归}
  \begin{block}{尾递归}
   \begin{scala}
-def comb(s: Seq[Char], p: Char => Boolean, shortcut: Boolean): Boolean =
-  s match {
-    case h +: t if (p(h) == shortcut) => shortcut
+private def comb(s: Seq[Char], p: Char => Boolean)(
+  expectTrue: Boolean): Boolean = s match {
+    case h +: t if (p(h) == expectTrue) => expectTrue
     case h +: t => exists(t)(p)
-    case _ => !shortcut
+    case _ => !expectTrue
   }
 
 def exists(s: Seq[Char])(p: Char => Boolean): Boolean = 
-  comb(s, p, true)
+  comb(s, p) { expectTrue = true }
 
 def forall(s: Seq[Char])(p: Char => Boolean): Boolean = 
-  comb(s, p, false)
+  comb(s, p) { expectTrue = false }
 
 exists(word.toSeq) { _.isDigit }
   \end{scala}
@@ -51,7 +47,7 @@ exists(word.toSeq) { _.isDigit }
 \end{frame}
 
 \begin{frame}[fragile]{表准库实现：String <-> StringOps}
- \begin{block}{隐式转换: StringOps实现了exists, forall等所有集合方法}
+ \begin{block}{隐式转换}
   \begin{scala}
 object Predef {
   implicit def wrap(x: String): StringOps = new StringOps(x)
@@ -62,20 +58,21 @@ object Predef {
 \end{frame}
 
 \begin{frame}[fragile]{StringOps的继承树}
- \begin{block}{隐式转换: StringOps实现了exists, forall等所有集合方法}
+ \begin{block}{StringOps实现了exists, forall等所有集合方法}
   \begin{scala}
 trait IndexedSeqOptimized[+A, +Repr] with IndexedSeqLike[A, Repr] {  
-  private def prefixLength(p: A => Boolean, expectTrue: Boolean): Int = {
+  private def prefixLength(p: A => Boolean)(
+    expectTrue: Boolean): Int = {
     var i = 0
     while (i < length && p(apply(i)) == expectTrue) i += 1
     i
   }
 
   override def forall(p: A => Boolean): Boolean = 
-    prefixLength(p, true) == length
+    prefixLength(p) { expectTrue = true } == length
   
   override def exists(p: A => Boolean): Boolean = 
-    prefixLength(p, false) != length
+    prefixLength(p) { expectTrue = false } != length
 }
   \end{scala}
  \end{block}

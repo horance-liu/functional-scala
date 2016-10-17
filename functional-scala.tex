@@ -13,12 +13,18 @@
 % the main document
 \begin{document}
 
-\input{content/content.tex}
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{内容}
+  \tableofcontents[hideallsubsections]
+\end{frame}
+
 \input{content/paradigms.tex}
 \input{content/oo-design.tex}
 \input{content/fp-design.tex}
 \input{content/design-essence.tex}
 \input{content/reference.tex}
-\input{content/thanks.tex}
 
 \end{document}
