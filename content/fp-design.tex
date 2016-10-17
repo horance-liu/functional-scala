@@ -32,19 +32,20 @@ val hasDigit: Char => Boolean = _.isDigit
 \begin{frame}[fragile]{递归}
  \begin{block}{尾递归}
   \begin{scala}
-def exists(s: Seq[Char])(p: Char => Boolean): Boolean =
+def comb(s: Seq[Char], p: Char => Boolean, shortcut: Boolean): Boolean =
   s match {
-    case h +: t if (p(h)) => true
+    case h +: t if (p(h) == shortcut) => shortcut
     case h +: t => exists(t)(p)
-    case _ => false
+    case _ => !shortcut
   }
 
-def forall(s: Seq[Char])(p: Char => Boolean): Boolean =
-  s match {
-    case h +: t if (!p(h)) => false
-    case h +: t => forall(t)(p)
-    case _ => true
-  }
+def exists(s: Seq[Char])(p: Char => Boolean): Boolean = 
+  comb(s, p, true)
+
+def forall(s: Seq[Char])(p: Char => Boolean): Boolean = 
+  comb(s, p, false)
+
+exists(word.toSeq) { _.isDigit }
   \end{scala}
  \end{block}
 \end{frame}
