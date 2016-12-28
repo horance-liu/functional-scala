@@ -1,4 +1,4 @@
-latexfile = functional-scala
+latexfile = orthogonal-design-in-scala
 
 all: prepare pdf
 
